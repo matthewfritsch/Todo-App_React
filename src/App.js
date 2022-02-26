@@ -54,11 +54,33 @@ function App() {
     setTasks(tasks.filter((task) => task.id !== id))
   }
 
+  const fetchTask = async (id) => {
+    const res = await fetch(`http://localhost:5000/tasks/${id}`);
+    const data = await res.json()
+    return data
+  }
+
   //Toggle Reminder
-  const changeToReminder = (id) => {
+  const toggleReminder = async (id) => {
+
+    const taskToToggle = await fetchTask(id)
+    const updTask = { ...taskToToggle, reminder: !taskToToggle.reminder }
+
+    const res = await fetch(`http://localhost:5000/tasks/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        reminder: updTask.reminder
+      })
+    })
+
+    const data = await res.json()
+
     setTasks(
       tasks.map((task) => 
-        task.id === id ? {...task, reminder: !task.reminder } : task
+        task.id === id ? {...task, reminder: data.reminder } : task
       )
     )
   }
@@ -68,7 +90,7 @@ function App() {
         <Header onAdd={() => setShowAddTab(!showAddTab)} showAdd={showAddTab}/>
         {showAddTab && <AddTask onAdd={addTask}/>}
         {tasks.length > 0 ? (
-          <Tasks tasks={tasks} onDelete={deleteTask} toggleReminder={changeToReminder}/>
+          <Tasks tasks={tasks} onDelete={deleteTask} toggleReminder={toggleReminder}/>
         ) : (
           'No Tasks To Show.'
         )}
